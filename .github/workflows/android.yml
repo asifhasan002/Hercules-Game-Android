@@ -18,11 +18,12 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v7
 
-      - name: Set up Java 8
+      # Android SDK setup currently requires JDK 17+.
+      - name: Set up Java 17 for Android SDK
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '8'
+          java-version: '17'
           cache: gradle
           cache-dependency-path: 'Hercules Game/gradle/wrapper/gradle-wrapper.properties'
 
@@ -31,6 +32,19 @@ jobs:
         with:
           packages: 'platform-tools platforms;android-30 build-tools;30.0.0'
 
+      # The original Hercules project uses old Gradle/AGP,
+      # so run the actual build with Java 8.
+      - name: Switch to Java 8 for Gradle build
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '8'
+          cache: gradle
+          cache-dependency-path: 'Hercules Game/gradle/wrapper/gradle-wrapper.properties'
+
+      - name: Verify Java
+        run: java -version
+
       - name: Make Gradle wrapper executable
         working-directory: Hercules Game
         run: chmod +x gradlew
@@ -38,6 +52,10 @@ jobs:
       - name: Build debug APK
         working-directory: Hercules Game
         run: ./gradlew --no-daemon --stacktrace android:assembleDebug
+
+      - name: Show APK
+        working-directory: Hercules Game
+        run: find android/build/outputs/apk -type f -name "*.apk" -print
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
